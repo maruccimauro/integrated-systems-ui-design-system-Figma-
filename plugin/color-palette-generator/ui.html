@@ -1,0 +1,606 @@
+<html>
+    <head>
+        <style>
+            body {
+                font-family: sans-serif;
+                padding: 24px;
+                margin: 0;
+                background: #f5f5f5;
+            }
+
+            .container {
+                max-width: 1040px;
+                margin: 0 auto;
+                background: white;
+                padding: 32px;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            h3 {
+                margin-top: 0;
+                margin-bottom: 24px;
+                font-size: 24px;
+                color: #333;
+            }
+
+            .selection-status {
+                padding: 12px 16px;
+                margin-bottom: 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .selection-status.valid {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            .selection-status.invalid {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+
+            .selection-status.none {
+                background: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeaa7;
+            }
+
+            .controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .control-group {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .control-group.full-width {
+                grid-column: 1 / -1;
+            }
+
+            label {
+                font-size: 13px;
+                font-weight: 600;
+                margin-bottom: 6px;
+                color: #555;
+            }
+
+            input[type="text"],
+            select,
+            textarea {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 14px;
+                box-sizing: border-box;
+                font-family: sans-serif;
+            }
+
+            textarea {
+                resize: vertical;
+                min-height: 60px;
+            }
+
+            input[type="color"] {
+                width: 100%;
+                height: 44px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+
+            .hex-input-wrapper {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .hex-input-wrapper input {
+                flex: 1;
+            }
+
+            .hex-preview-dot {
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
+                border: 1px solid #ddd;
+                flex-shrink: 0;
+                background: #004f94;
+                transition: background 0.15s;
+            }
+
+            .preview-section {
+                margin-bottom: 24px;
+            }
+
+            .preview-section h4 {
+                font-size: 16px;
+                margin-bottom: 16px;
+                color: #333;
+            }
+
+            .color-grid {
+                display: grid;
+                grid-template-columns: repeat(10, 1fr);
+                gap: 8px;
+                overflow-x: auto;
+            }
+
+            .color-card {
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                overflow: hidden;
+                background: white;
+                min-width: 80px;
+            }
+
+            .color-swatch {
+                height: 50px;
+                width: 100%;
+                transition: background 0.2s;
+            }
+
+            .color-card:hover .color-swatch {
+                filter: brightness(0.95);
+            }
+
+            .color-info {
+                padding: 8px 4px;
+                text-align: center;
+            }
+
+            .color-step {
+                font-weight: 600;
+                font-size: 12px;
+                color: #333;
+                margin-bottom: 4px;
+            }
+
+            .color-hex {
+                font-family: "Monaco", "Courier New", monospace;
+                font-size: 9px;
+                color: #666;
+                word-break: break-all;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px;
+                background: #0066ff;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            button:hover {
+                background: #0052cc;
+            }
+            button:active {
+                background: #003d99;
+            }
+            button:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+
+            #exportBox {
+                margin-top: 24px;
+                padding: 16px;
+                background: #f9f9f9;
+                border-radius: 8px;
+                border: 1px solid #e0e0e0;
+            }
+
+            #exportBox h4 {
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-size: 14px;
+            }
+
+            #exportText {
+                width: 100%;
+                height: 120px;
+                padding: 12px;
+                font-family: "Monaco", "Courier New", monospace;
+                font-size: 12px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                box-sizing: border-box;
+                resize: vertical;
+            }
+
+            #copyBtn {
+                margin-top: 8px;
+                background: #28a745;
+            }
+
+            #copyBtn:hover {
+                background: #218838;
+            }
+
+            .modal-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.45);
+                z-index: 100;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-overlay.visible {
+                display: flex;
+            }
+
+            .modal {
+                background: white;
+                border-radius: 12px;
+                padding: 28px 32px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            }
+
+            .modal-icon {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+
+            .modal h4 {
+                margin: 0 0 8px;
+                font-size: 18px;
+                color: #222;
+            }
+
+            .modal p {
+                margin: 0 0 24px;
+                font-size: 14px;
+                color: #555;
+                line-height: 1.5;
+            }
+
+            .modal p strong {
+                color: #222;
+            }
+
+            .modal-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .modal-actions button {
+                flex: 1;
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            #btnCancel {
+                background: #f0f0f0;
+                color: #333;
+            }
+
+            #btnCancel:hover {
+                background: #e0e0e0;
+            }
+
+            #btnConfirm {
+                background: #e53935;
+            }
+
+            #btnConfirm:hover {
+                background: #c62828;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h3>Color Scale Generator</h3>
+
+            <div id="selectionStatus" class="selection-status none">
+                ⚠️ Select a "Pallet color" component to continue
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label>Category name</label>
+                    <input
+                        id="category"
+                        type="text"
+                        placeholder="primary"
+                        value="primary"
+                    />
+                </div>
+
+                <div class="control-group">
+                    <label>Input method</label>
+                    <select id="mode">
+                        <option value="picker">Color Picker</option>
+                        <option value="manual">Enter HEX</option>
+                    </select>
+                </div>
+
+                <div class="control-group full-width">
+                    <label>Description</label>
+                    <textarea
+                        id="description"
+                        placeholder="Main color scale for the interface"
+                    ></textarea>
+                </div>
+
+                <div class="control-group" id="pickerContainer">
+                    <label>Select color (base 500)</label>
+                    <input type="color" id="colorPicker" value="#004F94" />
+                </div>
+
+                <div
+                    class="control-group"
+                    id="manualContainer"
+                    style="display: none"
+                >
+                    <label>Enter HEX code</label>
+                    <div class="hex-input-wrapper">
+                        <input
+                            id="manualColor"
+                            type="text"
+                            placeholder="#004F94"
+                        />
+                        <div class="hex-preview-dot" id="hexPreviewDot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h4>Scale preview</h4>
+                <div class="color-grid" id="colorGrid"></div>
+            </div>
+
+            <button id="create" disabled>
+                Apply colors to selected Pallet
+            </button>
+
+            <div id="exportBox" style="display: none"></div>
+        </div>
+
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal">
+                <div class="modal-icon">⚠️</div>
+                <h4>Category already exists</h4>
+                <p>
+                    The category
+                    <strong id="modalCategoryName"></strong> already exists in
+                    the color variables. Do you want to overwrite its values
+                    with the new colors?
+                </p>
+                <div class="modal-actions">
+                    <button id="btnCancel">Cancel</button>
+                    <button id="btnConfirm">Yes, overwrite</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const modeSelect = document.getElementById("mode");
+            const pickerContainer = document.getElementById("pickerContainer");
+            const manualContainer = document.getElementById("manualContainer");
+            const colorGrid = document.getElementById("colorGrid");
+            const createBtn = document.getElementById("create");
+            const selectionStatus = document.getElementById("selectionStatus");
+            const manualInput = document.getElementById("manualColor");
+            const hexPreviewDot = document.getElementById("hexPreviewDot");
+            const modalOverlay = document.getElementById("modalOverlay");
+
+            function isValidHex(hex) {
+                return /^#?[0-9A-Fa-f]{6}$/.test(hex.trim());
+            }
+
+            function normalizeHex(hex) {
+                hex = hex.trim();
+                if (!hex.startsWith("#")) hex = "#" + hex;
+                return hex.toUpperCase();
+            }
+
+            function getCurrentColor() {
+                if (modeSelect.value === "picker") {
+                    return document.getElementById("colorPicker").value;
+                }
+                const val = manualInput.value.trim();
+                return isValidHex(val) ? normalizeHex(val) : null;
+            }
+
+            function requestPreview() {
+                const color = getCurrentColor();
+                if (color) {
+                    parent.postMessage(
+                        { pluginMessage: { type: "preview-all", color } },
+                        "*",
+                    );
+                }
+            }
+
+            function updateSelectionStatus(valid, message) {
+                createBtn.disabled = !valid;
+                const state = valid
+                    ? "valid"
+                    : message.includes("Select")
+                      ? "none"
+                      : "invalid";
+                selectionStatus.className = "selection-status " + state;
+                const icon = valid
+                    ? "✓ "
+                    : message.includes("Select")
+                      ? "⚠️ "
+                      : "✗ ";
+                selectionStatus.innerHTML = icon + message;
+            }
+
+            modeSelect.onchange = () => {
+                if (modeSelect.value === "picker") {
+                    pickerContainer.style.display = "flex";
+                    manualContainer.style.display = "none";
+                } else {
+                    pickerContainer.style.display = "none";
+                    manualContainer.style.display = "flex";
+                }
+                requestPreview();
+            };
+
+            document.getElementById("colorPicker").oninput = requestPreview;
+
+            manualInput.addEventListener("input", () => {
+                const val = manualInput.value.trim();
+                if (isValidHex(val)) {
+                    const hex = normalizeHex(val);
+                    hexPreviewDot.style.background = hex;
+                    hexPreviewDot.style.borderColor = "#bbb";
+                    manualInput.style.borderColor = "#ddd";
+                    parent.postMessage(
+                        { pluginMessage: { type: "preview-all", color: hex } },
+                        "*",
+                    );
+                } else {
+                    hexPreviewDot.style.background = "#eee";
+                    hexPreviewDot.style.borderColor = "#ddd";
+                    manualInput.style.borderColor =
+                        val.length > 0 ? "#f5a0a0" : "#ddd";
+                }
+            });
+
+            document.getElementById("create").onclick = () => {
+                const category =
+                    document.getElementById("category").value || "primary";
+                const description =
+                    document.getElementById("description").value ||
+                    `Color scale ${category}`;
+                const mode = document.getElementById("mode").value;
+
+                let color;
+                if (mode === "picker") {
+                    color = document.getElementById("colorPicker").value;
+                } else {
+                    color = getCurrentColor();
+                    if (!color) {
+                        alert("Please enter a valid HEX code (e.g. #004F94)");
+                        return;
+                    }
+                }
+
+                parent.postMessage(
+                    {
+                        pluginMessage: {
+                            type: "apply-colors",
+                            category,
+                            description,
+                            color,
+                        },
+                    },
+                    "*",
+                );
+            };
+
+            document.getElementById("btnConfirm").onclick = () => {
+                modalOverlay.classList.remove("visible");
+                parent.postMessage(
+                    { pluginMessage: { type: "confirm-overwrite" } },
+                    "*",
+                );
+            };
+
+            document.getElementById("btnCancel").onclick = () => {
+                modalOverlay.classList.remove("visible");
+                parent.postMessage(
+                    { pluginMessage: { type: "cancel-overwrite" } },
+                    "*",
+                );
+            };
+
+            modalOverlay.addEventListener("click", (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.classList.remove("visible");
+                    parent.postMessage(
+                        { pluginMessage: { type: "cancel-overwrite" } },
+                        "*",
+                    );
+                }
+            });
+
+            onmessage = (event) => {
+                const msg = event.data.pluginMessage;
+                if (!msg) return;
+
+                if (msg.type === "show-export") {
+                    showExport(msg.text);
+                }
+                if (msg.type === "preview-all-result") {
+                    updatePreview(msg.shades);
+                }
+                if (msg.type === "selection-changed") {
+                    updateSelectionStatus(msg.valid, msg.message);
+                }
+                if (msg.type === "confirm-overwrite") {
+                    document.getElementById("modalCategoryName").textContent =
+                        `"${msg.category}"`;
+                    modalOverlay.classList.add("visible");
+                }
+            };
+
+            function updatePreview(shades) {
+                colorGrid.innerHTML = "";
+                shades.forEach((shade) => {
+                    const card = document.createElement("div");
+                    card.className = "color-card";
+                    card.innerHTML = `
+                        <div class="color-swatch" style="background-color: ${shade.hex}"></div>
+                        <div class="color-info">
+                            <div class="color-step">${shade.step}</div>
+                            <div class="color-hex">${shade.hex}</div>
+                        </div>
+                    `;
+                    colorGrid.appendChild(card);
+                });
+            }
+
+            function showExport(text) {
+                const container = document.getElementById("exportBox");
+                container.style.display = "block";
+
+                if (!container.querySelector("h4")) {
+                    container.innerHTML = `
+                        <h4>Applied colors</h4>
+                        <textarea id="exportText" readonly></textarea>
+                        <button id="copyBtn">Copy to clipboard</button>
+                    `;
+                    document.getElementById("copyBtn").onclick = () => {
+                        const ta = document.getElementById("exportText");
+                        ta.select();
+                        document.execCommand("copy");
+                        document.getElementById("copyBtn").textContent =
+                            "✓ Copied";
+                        setTimeout(() => {
+                            document.getElementById("copyBtn").textContent =
+                                "Copy to clipboard";
+                        }, 2000);
+                    };
+                }
+
+                document.getElementById("exportText").value = text;
+            }
+
+            requestPreview();
+            parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");
+        </script>
+    </body>
+</html>
